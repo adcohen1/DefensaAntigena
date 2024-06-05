@@ -21,23 +21,28 @@ pg.display.set_caption('Defensa Antigena')
 
 # variables del juego
 colocando_torretas = False
-lvl = '4'
+torreta_seleccionada = None
+lvl = '1'
 
 # cargar imagenes
 # niveles
 nivel0 = pg.image.load('../assets/niveles/Nivel' + lvl + '.png').convert_alpha()
 
+# cargar hoja de animacion
+hoja_torreta1 = pg.image.load('../assets/torretas/Torreta1.png').convert_alpha()
+
 # tienda
 tienda = pg.image.load('../assets/tienda/Tienda' + lvl + '.png').convert_alpha()
 
 # imagenes de turretas individuales para el mouse
-cursor_torreta = pg.image.load('../assets/anticuerpos.png').convert_alpha()
+cursor_torreta = pg.image.load('../assets/comprar1.png').convert_alpha()
 
 # enemigos
 imagen_enemigo = pg.image.load('../assets/enemigo1.png').convert_alpha()
 
 # botones
-buy_turret_image = pg.image.load('../assets/anticuerpos.png').convert_alpha()
+buy_turret_image = pg.image.load('../assets/comprar1.jpeg').convert_alpha()
+cancel_image = pg.image.load('../assets/boton_cancelar.png').convert_alpha()
 
 # cargar datos del archivo .json para el nivel
 
@@ -58,8 +63,21 @@ def crear_torreta(mousepos):
             if (mouse_fila, mouse_col) == (torreta.fila, torreta.columna):
                 casilla_esta_libre = False
         if casilla_esta_libre:
-            torreta = Turret(cursor_torreta, mouse_fila, mouse_col)
+            torreta = Turret(hoja_torreta1, mouse_fila, mouse_col)
             grupo_torreta.add(torreta)
+
+
+def selecionar_torreta(mousepos):
+    mouse_fila = mousepos[0] // c.TILE_SIZE
+    mouse_col = mousepos[1] // c.TILE_SIZE
+    for torreta in grupo_torreta:
+        if (mouse_fila, mouse_col) == (torreta.fila, torreta.columna):
+            return torreta
+
+
+def quitar_seleccion():
+    for t in grupo_torreta:
+        t.seleccionado = False
 
 
 # crear nivel
@@ -74,7 +92,8 @@ ruta = random.randint(0, 1)
 enemigo = Enemigo(nivel.waypoints[ruta], imagen_enemigo)
 grupo_enemigo.add(enemigo)
 
-buy_button = Button(c.SCREEN_WIDTH + 25, 300, buy_turret_image, True)
+buy_button = Button(c.SCREEN_WIDTH + 27, 302, buy_turret_image, True)
+cancel_button = Button(c.SCREEN_WIDTH + 315, 196, cancel_image, True)
 
 # game loop
 run = True
@@ -88,6 +107,11 @@ while run:
 
     # actualizar grupos
     grupo_enemigo.update()
+    grupo_torreta.update(grupo_enemigo)
+
+    # resaltar torreta seleccionada
+    if torreta_seleccionada:
+        torreta_seleccionada.seleccionado = True
 
     '''        ╔═══════════════════════════╗
                ║     ZONA DE DIBUJADO      ║
@@ -99,10 +123,11 @@ while run:
     nivel.dibujar(screen)
     screen.blit(tienda, (1500, 0))
 
-
     # dibujar grupos
     grupo_enemigo.draw(screen)
-    grupo_torreta.draw(screen)
+    for t in grupo_torreta:
+        t.draw(screen)
+    #grupo_torreta.draw(screen)
 
     # dibujar botones
     if buy_button.draw(screen):
@@ -118,24 +143,33 @@ while run:
             screen.blit(cursor_torreta, cursor_rect)
 
         # dibujar el boton de cancelar
-        #colocando_torretas = False
-        pass
+        if cancel_button.draw(screen):
+            colocando_torretas = False
 
-    ''' ╔═══════════════════════════╗
-        ║          EVENTOS          ║
-        ╚═══════════════════════════╝ '''
+    '''        ╔═══════════════════════════╗
+               ║          EVENTOS          ║
+               ╚═══════════════════════════╝        '''
 
     for event in pg.event.get():
         # cerrar el juego
         if event.type == pg.QUIT:
             run = False
 
+        if event.type == pg.KEYDOWN and event.key == pg.K_ESCAPE:
+            run = False
+
         # clics
         if event.type == pg.MOUSEBUTTONDOWN and event.button == 1:
             mouse_pos = pg.mouse.get_pos()
+
+            # verificar que el mouse este dentro del mapa
             if mouse_pos[0] < c.SCREEN_WIDTH and mouse_pos[1] < c.SCREEN_HEGHT:
+                torreta_seleccionada = None
+                quitar_seleccion()
                 if colocando_torretas:
                     crear_torreta(mouse_pos)
+                else:
+                    torreta_seleccionada = selecionar_torreta(mouse_pos)
 
     # actualizar la pantalla
     pg.display.flip()
