@@ -7,10 +7,11 @@ class Nivel:
 
     def pocesar_datos(self):
         # buscar la información relevante en el archivo json
+        ruta = []
         for layer in self.datos_nivel['layers']:
             if layer['name'] == 'posiciones':
                 self.tile_map = layer['data']
-            elif layer['name'] == 'waypoints':
+            elif layer['name'] == 'waypoints' or layer['name'] == 'waypoints2':
                 for obj in layer['objects']:
                     xfix = obj['x']
                     yfix = obj['y']
@@ -18,7 +19,9 @@ class Nivel:
                     for punto in waypoint_data:
                         temp_x = punto.get('x') + xfix
                         temp_y = punto.get('y') + yfix
-                        self.waypoints.append((temp_x, temp_y))
+                        ruta.append((temp_x, temp_y))
+                self.waypoints.append(ruta)
+                ruta = []
 
 
     '''def procesar_waypoints(self, datos):
