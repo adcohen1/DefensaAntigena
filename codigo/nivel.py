@@ -23,7 +23,6 @@ class Nivel:
                 self.waypoints.append(ruta)
                 ruta = []
 
-
     '''def procesar_waypoints(self, datos):
         # iterar sobre los waypoints para extraer los sets individuales de coordenadas x y y
         for punto in datos:
